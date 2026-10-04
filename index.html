@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f4a33">
+<title>DIMSIM Rewards · Register your visit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* =====================================================
+   SETTINGS — the only part you normally need to change
+   (the Apps Script URL is set near the bottom of this file)
+   ===================================================== */
+:root{
+  --cream:#f5ecd9;
+  --paper:#fbf6ea;
+  --forest:#2f4a33;
+  --forest-dark:#223826;
+  --leaf:#6f8f4e;
+  --sun:#e8a93f;
+  --gift:#d9822b;
+  --ink:#2b2a24;
+  --muted:#6d6957;
+  --line:#e4d6b8;
+  --danger:#a5402d;
+  --radius-lg:22px;
+  --radius:14px;
+  --serif:"Fraunces", Georgia, "Times New Roman", serif;
+  --sans:"Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--sans);color:var(--ink);background:var(--cream);
+  -webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+.app{
+  max-width:440px;min-height:100%;margin:0 auto;background:var(--paper);
+  position:relative;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px var(--line);
+}
+/* corner leaves */
+.leaf-tl,.leaf-br{position:absolute;width:92px;height:92px;color:var(--leaf);opacity:.85;pointer-events:none;z-index:0}
+.leaf-tl{top:-6px;left:-10px}
+.leaf-br{bottom:-6px;right:-10px;transform:rotate(180deg)}
+
+header{position:relative;z-index:1;text-align:center;padding:22px 20px 8px}
+.logo-mark{width:58px;height:22px;color:var(--forest);display:block;margin:0 auto -2px}
+.logo{font-family:"Cinzel",Georgia,serif;font-size:30px;letter-spacing:.06em;color:var(--forest);line-height:1}
+.tagline{font-size:10.5px;letter-spacing:.32em;color:var(--muted);margin-top:4px}
+.back{position:absolute;left:14px;top:24px;width:40px;height:40px;border-radius:50%;border:0;background:transparent;color:var(--forest);cursor:pointer;display:none}
+.back svg{width:22px;height:22px}
+.back.show{display:grid;place-items:center}
+
+main{position:relative;z-index:1;flex:1;display:flex;flex-direction:column}
+.screen{display:none;flex:1;flex-direction:column;padding:8px 24px 32px}
+.screen.active{display:flex;animation:enter .35s ease both}
+@keyframes enter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen.active{animation:none}}
+
+h1{font-family:var(--serif);font-weight:700;font-size:30px;line-height:1.15;color:var(--forest-dark);text-align:center}
+h2{font-family:var(--serif);font-weight:700;font-size:24px;line-height:1.2;color:var(--forest-dark);text-align:center}
+.lead{text-align:center;color:var(--muted);font-size:15.5px;line-height:1.5;margin:8px auto 0;max-width:30ch}
+
+/* hero illustration */
+.hero{margin:6px -24px 18px;height:190px;position:relative}
+.hero svg{width:100%;height:100%;display:block}
+
+/* buttons */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  min-height:52px;padding:12px 18px;border-radius:999px;border:0;cursor:pointer;
+  font:700 16px/1.2 var(--sans);text-decoration:none;transition:transform .08s, background .15s;
+}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--forest);color:#fff}
+.btn-primary:hover{background:var(--forest-dark)}
+.btn-soft{background:var(--cream);color:var(--forest-dark);border:1px solid var(--line)}
+.btn-soft:hover{background:#efe3c9}
+.btn-link{background:none;color:var(--forest);min-height:44px;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.btn[disabled]{opacity:.6;cursor:wait}
+.stack{display:grid;gap:12px;margin-top:22px}
+:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+
+.fineprint{text-align:center;font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:22px}
+
+/* form */
+form{display:grid;gap:12px;margin-top:22px}
+.field{position:relative}
+.field svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);width:19px;height:19px;color:var(--muted);pointer-events:none}
+.field input{
+  width:100%;height:54px;border-radius:var(--radius);border:1.5px solid var(--line);
+  background:#fff;padding:0 16px 0 46px;font:16px var(--sans);color:var(--ink);
+}
+.field input:focus{outline:none;border-color:var(--forest);box-shadow:0 0 0 3px rgba(47,74,51,.15)}
+.field input::placeholder{color:#9b9580}
+.consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--muted);line-height:1.45;margin-top:2px}
+.consent input{width:20px;height:20px;margin-top:1px;accent-color:var(--forest);flex:none}
+.error{color:var(--danger);font-size:14px;text-align:center;min-height:20px}
+
+/* confirmation */
+.badge{width:84px;height:84px;border-radius:50%;background:var(--forest);color:#fff;display:grid;place-items:center;margin:14px auto 18px}
+.badge svg{width:42px;height:42px}
+.badge.pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}
+.badge.gift{background:var(--gift)}
+.badge.info{background:var(--sun)}
+
+.count-line{text-align:center;margin-top:14px;font-size:15px;color:var(--ink)}
+.count-line b{font-family:var(--serif);font-size:20px;color:var(--forest-dark)}
+
+/* reward ticket (shown to staff) */
+.ticket{
+  margin-top:20px;border:2px dashed var(--gift);border-radius:var(--radius-lg);
+  background:#fff7ea;padding:18px 16px;text-align:center;
+}
+.ticket .t-head{font-size:14px;color:var(--muted)}
+.ticket .t-title{font-family:var(--serif);font-weight:700;font-size:28px;color:var(--forest-dark);line-height:1.15;margin:4px 0}
+.ticket .t-sub{font-size:15px;color:var(--ink)}
+.ticket .t-meta{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.5}
+.ticket .t-meta strong{color:var(--ink)}
+.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3d9a52;margin-right:6px;animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* stamps */
+.stamps{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:22px auto 0;width:100%;max-width:330px}
+.stamp{
+  aspect-ratio:1;border-radius:50%;border:2px solid var(--line);background:#fff;
+  display:grid;place-items:center;font:700 17px var(--sans);color:var(--muted);position:relative;
+}
+.stamp.done{background:var(--forest);border-color:var(--forest);color:#fff}
+.stamp.done svg{width:22px;height:22px}
+.stamp.has-reward:not(.done){border-color:var(--sun)}
+.stamp.final{background:#fbe6c8;border-color:var(--gift);color:var(--gift)}
+.stamp.final.done{background:var(--gift);border-color:var(--gift);color:#fff}
+.stamp.final svg{width:24px;height:24px}
+.stamp.today{box-shadow:0 0 0 4px rgba(232,169,63,.45)}
+
+.next{
+  display:flex;gap:14px;align-items:center;margin-top:24px;padding:16px;
+  border-radius:var(--radius-lg);background:var(--cream);border:1px solid var(--line);
+}
+.next .ico{width:48px;height:48px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none;color:var(--gift)}
+.next .ico svg{width:26px;height:26px}
+.next .n-title{font-family:var(--serif);font-weight:700;font-size:18px;color:var(--forest-dark)}
+.next .n-text{font-size:14px;color:var(--ink);line-height:1.45;margin-top:2px}
+
+/* rewards journey */
+.journey{list-style:none;margin-top:22px;position:relative}
+.journey::before{content:"";position:absolute;left:27px;top:28px;bottom:28px;border-left:2px dashed var(--line)}
+.journey li{display:flex;gap:16px;align-items:center;padding:10px 0;position:relative}
+.journey .j-ico{width:56px;height:56px;border-radius:50%;background:var(--cream);border:2px solid var(--line);display:grid;place-items:center;flex:none;color:var(--forest)}
+.journey .j-ico svg{width:28px;height:28px}
+.journey li.got .j-ico{background:var(--forest);border-color:var(--forest);color:#fff}
+.journey li.big .j-ico{background:var(--gift);border-color:var(--gift);color:#fff}
+.journey .j-visit{font-size:13px;color:var(--muted);font-weight:700}
+.journey .j-title{font-family:var(--serif);font-weight:700;font-size:19px;color:var(--forest-dark);line-height:1.2}
+.journey .j-desc{font-size:14px;color:var(--ink)}
+.terms{font-size:12.5px;color:var(--muted);text-align:center;margin-top:18px;line-height:1.6}
+
+/* congrats */
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.confetti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}}
+
+/* loader + toast */
+.loader{position:fixed;inset:0;background:rgba(251,246,234,.82);display:none;place-items:center;z-index:20}
+.loader.show{display:grid}
+.spinner{width:46px;height:46px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--forest);animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.demo-banner{background:var(--sun);color:#2b2a24;font-size:12.5px;text-align:center;padding:6px 10px;font-weight:600;position:relative;z-index:3}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="demo-banner hidden" id="demoBanner">Demo mode: visits are saved only on this phone. Add your Google Script URL to go live.</div>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-leaves" viewBox="0 0 100 100"><g fill="currentColor"><path d="M8 92 C30 70 50 48 92 8" stroke="currentColor" stroke-width="2.2" fill="none"/><path d="M22 76c-10-2-16-10-16-20 10 1 17 9 16 20z"/><path d="M24 74c2-10 11-15 21-14-2 10-11 15-21 14z"/><path d="M40 58c-10-3-15-11-14-21 10 2 16 10 14 21z"/><path d="M42 56c3-10 12-14 22-12-3 10-12 14-22 12z"/><path d="M58 40c-9-4-13-12-11-22 9 3 14 12 11 22z"/><path d="M60 38c4-9 13-12 22-9-4 9-13 12-22 9z"/><path d="M78 21c-6-5-8-13-4-20 6 4 8 13 4 20z"/></g></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-gift" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5v8h14v-8M12 8.5v12"/><path d="M12 8.5c-1.5-3.5-5.5-4-5.5-1.5 0 1.6 2.5 1.5 5.5 1.5zM12 8.5c1.5-3.5 5.5-4 5.5-1.5 0 1.6-2.5 1.5-5.5 1.5z"/></g></symbol>
+      <symbol id="i-leaf" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M5 19C5 10 10 5 19 5c0 9-5 14-14 14z"/><path d="M5 19l8-8"/></g></symbol>
+      <symbol id="i-cup" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17M8 3.5c-.8 1 .8 2 0 3M12 3.5c-.8 1 .8 2 0 3"/></g></symbol>
+      <symbol id="i-bowl" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 11h18a9 9 0 0 1-18 0zM9 20h6"/><path d="M8 11c0-2 1.5-3 3-3s2.5-1 3-3M15 11c0-1.5 1-2.5 2.5-2.5"/></g></symbol>
+      <symbol id="i-momo" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c0-5 3.5-9 8-9s8 4 8 9z"/><path d="M12 7c-.5-1.5 0-3 1-3.5M9 8.5L10.5 16M15 8.5L13.5 16M3 19h18"/></g></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c1.5-4 4.5-6 8-6s6.5 2 8 6"/></g></symbol>
+      <symbol id="i-phone" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" d="M6.5 3.5h3l1.5 4-2 1.5a11 11 0 0 0 6 6l1.5-2 4 1.5v3a2 2 0 0 1-2 2A16 16 0 0 1 4.5 5.5a2 2 0 0 1 2-2z"/></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></g></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></g></symbol>
+      <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+      <symbol id="i-clock" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></g></symbol>
+    </defs>
+  </svg>
+
+  <svg class="leaf-tl" aria-hidden="true"><use href="#i-leaves"/></svg>
+  <svg class="leaf-br" aria-hidden="true"><use href="#i-leaves"/></svg>
+
+  <header>
+    <button class="back" id="backBtn" aria-label="Go back"><svg><use href="#i-back"/></svg></button>
+    <svg class="logo-mark" viewBox="0 0 60 22" aria-hidden="true"><path d="M2 21L18 6l6 6 8-10 10 10 4-4 12 13" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M28 6l4-4 4 4-4 1z" fill="currentColor"/></svg>
+    <div class="logo" id="brandName">DIMSIM</div>
+    <div class="tagline">EAT &nbsp;•&nbsp; CHILL &nbsp;•&nbsp; STAY</div>
+  </header>
+
+  <main>
+    <!-- 1. WELCOME -->
+    <section class="screen active" id="s-welcome" aria-labelledby="h-welcome">
+      <div class="hero" aria-hidden="true">
+        <svg viewBox="0 0 440 190" preserveAspectRatio="xMidYMax slice">
+          <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbf6ea"/><stop offset="1" stop-color="#f3e2bf"/></linearGradient></defs>
+          <rect width="440" height="190" fill="url(#sky)"/>
+          <circle cx="250" cy="92" r="30" fill="#efbb57"/>
+          <path d="M0 140 L70 70 L110 105 L170 40 L230 110 L290 60 L350 112 L400 78 L440 104 V190 H0z" fill="#9db0b4"/>
+          <path d="M150 58l20-18 20 22-12-6-8 8-8-6z M270 76l20-16 18 18-10-4-8 6z" fill="#fff" opacity=".85"/>
+          <path d="M0 160 L60 118 L120 146 L190 104 L260 150 L330 116 L400 148 L440 130 V190 H0z" fill="#6f8b7a"/>
+          <path d="M0 190 V168 C80 150 160 176 230 162 C300 150 370 172 440 158 V190z" fill="#4c6b47"/>
+          <g fill="#2f4a33">
+            <path d="M30 175 l14-48 14 48z M48 178 l11-36 11 36z"/>
+            <path d="M380 176 l15-52 15 52z M402 180 l10-34 10 34z M360 180 l9-28 9 28z"/>
+          </g>
+        </svg>
+      </div>
+      <h1 id="h-welcome">Welcome!</h1>
+      <p class="lead" id="welcomeLead">Register your visit and unlock rewards every time you come back.</p>
+      <div class="stack">
+        <button class="btn btn-primary" id="registerBtn">Register my visit</button>
+        <button class="btn btn-soft" id="stampsBtn">See my visits</button>
+        <button class="btn btn-link" id="journeyBtn">How rewards work</button>
+      </div>
+      <button class="btn btn-link hidden" id="notMeBtn" style="font-size:14px">Not you? Use a different number</button>
+      <p class="fineprint">Quick • Easy • Takes 20 seconds</p>
+    </section>
+
+    <!-- 2. DETAILS -->
+    <section class="screen" id="s-details" aria-labelledby="h-details">
+      <h2 id="h-details">Just a few details</h2>
+      <p class="lead">Your phone number is your rewards card. No app or password needed.</p>
+      <form id="detailsForm" novalidate>
+        <label class="field"><span class="hidden">Full name</span>
+          <svg><use href="#i-user"/></svg>
+          <input id="fName" name="name" autocomplete="name" placeholder="Full name *" required maxlength="60">
+        </label>
+        <label class="field"><span class="hidden">Phone number</span>
+          <svg><use href="#i-phone"/></svg>
+          <input id="fPhone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile number *" required maxlength="14">
+        </label>
+        <label class="field"><span class="hidden">Email</span>
+          <svg><use href="#i-mail"/></svg>
+          <input id="fEmail" name="email" type="email" autocomplete="email" placeholder="Email (optional)" maxlength="80">
+        </label>
+        <label class="field"><span class="hidden">City</span>
+          <svg><use href="#i-pin"/></svg>
+          <input id="fCity" name="city" autocomplete="address-level2" placeholder="City (optional)" maxlength="40">
+        </label>
+        <label class="consent"><input type="checkbox" id="fConsent" checked>
+          <span>I agree that DIMSIM can save these details to track my visits and send me offers.</span></label>
+        <p class="error" id="formError" role="alert"></p>
+        <button class="btn btn-primary" type="submit" id="submitBtn">Register my visit</button>
+      </form>
+    </section>
+
+    <!-- 3. CONFIRMATION -->
+    <section class="screen" id="s-confirm" aria-live="polite">
+      <div class="badge pop" id="confirmBadge"><svg><use href="#i-check"/></svg></div>
+      <h2 id="confirmTitle">Visit registered!</h2>
+      <p class="lead" id="confirmText">Thank you for visiting DIMSIM.</p>
+      <p class="count-line" id="confirmCount"></p>
+      <div id="confirmTicket"></div>
+      <div class="stack">
+        <button class="btn btn-primary" data-go="stamps">See my visits</button>
+        <button class="btn btn-soft" data-go="welcome">Back to home</button>
+      </div>
+    </section>
+
+    <!-- 4. STAMPS -->
+    <section class="screen" id="s-stamps" aria-labelledby="h-stamps">
+      <h2 id="h-stamps">Your visits</h2>
+      <p class="lead" id="stampsLead">Keep visiting and unlock rewards.</p>
+      <div class="stamps" id="stampGrid" role="list"></div>
+      <div class="next" id="nextBox"></div>
+      <div class="stack">
+        <button class="btn btn-primary" data-go="journey">How rewards work</button>
+        <button class="btn btn-soft" data-go="welcome">Back to home</button>
+      </div>
+    </section>
+
+    <!-- 5. REWARDS JOURNEY -->
+    <section class="screen" id="s-journey" aria-labelledby="h-journey">
+      <h2 id="h-journey">Rewards journey</h2>
+      <p class="lead">The more you visit, the more you get.</p>
+      <ul class="journey" id="journeyList"></ul>
+      <p class="terms">Offers may vary. Valid for dine-in only. One visit counted per day. Ask staff for details.</p>
+      <div class="stack"><button class="btn btn-soft" data-go="welcome">Back to home</button></div>
+    </section>
+
+    <!-- 6. FIND MY VISITS (phone lookup) -->
+    <section class="screen" id="s-lookup" aria-labelledby="h-lookup">
+      <h2 id="h-lookup">Find my visits</h2>
+      <p class="lead">Enter the mobile number you registered with.</p>
+      <form id="lookupForm" novalidate>
+        <label class="field"><span class="hidden">Phone number</span>
+          <svg><use href="#i-phone"/></svg>
+          <input id="lPhone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="10-digit mobile number" maxlength="14">
+        </label>
+        <p class="error" id="lookupError" role="alert"></p>
+        <button class="btn btn-primary" type="submit">Show my visits</button>
+      </form>
+    </section>
+  </main>
+
+  <div class="confetti" id="confetti"></div>
+</div>
+<div class="loader" id="loader" role="status" aria-label="Loading"><div class="spinner"></div></div>
+
+<script>
+/* =====================================================
+   1) PASTE YOUR GOOGLE APPS SCRIPT WEB-APP URL HERE
+      (leave empty "" to run in demo mode)
+   ===================================================== */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzJfFzFbJPU9fcctIPJScTjz_Qz6Hth5oyz8HI4Ug0dmSDxkAh0Hwa44b6UZB_apWXa/exec";
+
+/* 2) Rewards — edit text here if the offers change.
+      Keep the same numbers in Code.gs too. */
+const RESTAURANT = "DIMSIM";
+const CARD_SIZE = 10;
+const REWARDS = {
+  2:  { title: "10% OFF",   desc: "on Food & Beverages",          icon: "leaf" },
+  3:  { title: "Free Hot Chai / Coffee", desc: "on us",            icon: "cup"  },
+  5:  { title: "20% OFF",   desc: "on Any Meal",                  icon: "bowl" },
+  7:  { title: "Free Momos / Dessert", desc: "your pick",          icon: "momo" },
+  10: { title: "FREE MEAL", desc: "or Maximum Discount",           icon: "gift" }
+};
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const icon = n => `<svg><use href="#i-${n}"/></svg>`;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+const cleanPhone = p => String(p || "").replace(/\D/g, "").slice(-10);
+const posInCard = v => v <= 0 ? 0 : ((v - 1) % CARD_SIZE) + 1;
+const store = {
+  get(k){ try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k){ try { localStorage.removeItem(k); } catch {} }
+};
+const todayStr = () => new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
+
+let me = store.get("dimsim_me");          // {name, phone}
+let state = { visits: 0, today: false };  // latest known numbers
+let history = [];
+
+/* ---------- API (Google Sheet backend, or local demo) ---------- */
+async function api(action, data){
+  if (!SCRIPT_URL) return demoApi(action, data);
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" }, // avoids CORS pre-flight
+    body: JSON.stringify({ action, ...data })
+  });
+  if (!res.ok) throw new Error("Network error " + res.status);
+  return res.json();
+}
+function demoApi(action, data){
+  const db = store.get("dimsim_demo_db") || {};
+  const phone = cleanPhone(data.phone);
+  const c = db[phone];
+  if (action === "lookup"){
+    if (!c) return { ok: false, error: "We couldn't find that number. Register your visit first." };
+    return { ok: true, name: c.name, visits: c.visits, today: c.last === todayStr() };
+  }
+  if (action === "register"){
+    if (phone.length !== 10) return { ok: false, error: "Enter a valid 10-digit mobile number." };
+    if (c && c.last === todayStr()) return { ok: true, already: true, name: c.name, visits: c.visits };
+    const rec = c || { name: data.name, visits: 0 };
+    rec.name = data.name || rec.name; rec.visits += 1; rec.last = todayStr();
+    db[phone] = rec; store.set("dimsim_demo_db", db);
+    return { ok: true, already: false, name: rec.name, visits: rec.visits };
+  }
+}
+
+/* ---------- navigation ---------- */
+function go(name, push = true){
+  const cur = document.querySelector(".screen.active");
+  if (push && cur && cur.id !== "s-" + name) history.push(cur.id.slice(2));
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $("s-" + name).classList.add("active");
+  $("backBtn").classList.toggle("show", name !== "welcome");
+  if (name === "welcome") history = [];
+  if (name === "stamps") renderStamps();
+  if (name === "journey") renderJourney();
+  window.scrollTo(0, 0);
+}
+$("backBtn").onclick = () => go(history.pop() || "welcome", false);
+document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => go(b.dataset.go));
+
+function loading(on){ $("loader").classList.toggle("show", on); }
+
+/* ---------- welcome ---------- */
+function renderWelcome(){
+  if (me){
+    $("h-welcome").textContent = `Welcome back, ${me.name.split(" ")[0]}!`;
+    $("welcomeLead").textContent = "Tap once to add today's visit to your card.";
+    $("registerBtn").textContent = "Register today's visit";
+    $("notMeBtn").classList.remove("hidden");
+  } else {
+    $("h-welcome").textContent = "Welcome!";
+    $("welcomeLead").textContent = "Register your visit and unlock rewards every time you come back.";
+    $("registerBtn").textContent = "Register my visit";
+    $("notMeBtn").classList.add("hidden");
+  }
+}
+$("registerBtn").onclick = () => me ? submitVisit(me) : go("details");
+$("stampsBtn").onclick = () => me ? refreshAndShowStamps() : go("lookup");
+$("journeyBtn").onclick = () => go("journey");
+$("notMeBtn").onclick = () => { store.del("dimsim_me"); me = null; renderWelcome(); go("details"); };
+
+/* ---------- details form ---------- */
+$("detailsForm").onsubmit = e => {
+  e.preventDefault();
+  const name = $("fName").value.trim();
+  const phone = cleanPhone($("fPhone").value);
+  const email = $("fEmail").value.trim();
+  const city = $("fCity").value.trim();
+  const err = $("formError");
+  if (name.length < 2) return err.textContent = "Enter your name.", $("fName").focus();
+  if (!/^[6-9]\d{9}$/.test(phone)) return err.textContent = "Enter a valid 10-digit mobile number.", $("fPhone").focus();
+  if (email && !/^\S+@\S+\.\S+$/.test(email)) return err.textContent = "Check your email address, or leave it empty.", $("fEmail").focus();
+  if (!$("fConsent").checked) return err.textContent = "Tick the box so we can save your visits.";
+  err.textContent = "";
+  submitVisit({ name, phone, email, city });
+};
+
+async function submitVisit(person){
+  loading(true); $("submitBtn").disabled = true;
+  try {
+    const r = await api("register", person);
+    if (!r.ok) throw new Error(r.error || "Something went wrong");
+    me = { name: r.name || person.name, phone: cleanPhone(person.phone) };
+    store.set("dimsim_me", me);
+    state = { visits: r.visits, today: true };
+    renderConfirm(r.already);
+    renderWelcome();
+    go("confirm");
+  } catch (ex){
+    const msg = ex.message.includes("fetch") || ex.message.includes("Network")
+      ? "No connection. Check your internet and try again." : ex.message;
+    if ($("s-details").classList.contains("active")) $("formError").textContent = msg;
+    else alert(msg);
+  } finally { loading(false); $("submitBtn").disabled = false; }
+}
+
+/* ---------- confirmation ---------- */
+let clockTimer;
+function renderConfirm(already){
+  const v = state.visits, pos = posInCard(v), reward = REWARDS[pos];
+  const badge = $("confirmBadge");
+  badge.className = "badge pop" + (already ? " info" : reward ? " gift" : "");
+  badge.innerHTML = icon(already ? "clock" : reward ? "gift" : "check");
+
+  if (already){
+    $("confirmTitle").textContent = "Already counted today";
+    $("confirmText").textContent = "Only one visit is counted per day. See you again soon!";
+  } else if (pos === CARD_SIZE){
+    $("confirmTitle").textContent = "Congratulations!";
+    $("confirmText").textContent = `You've completed ${CARD_SIZE} visits at ${RESTAURANT}.`;
+    confetti();
+  } else {
+    $("confirmTitle").textContent = "Visit registered!";
+    $("confirmText").textContent = `Thank you for visiting ${RESTAURANT}, ${me.name.split(" ")[0]}.`;
+  }
+  $("confirmCount").innerHTML = `Visit <b>${pos}</b> of ${CARD_SIZE} on your card`;
+
+  clearInterval(clockTimer);
+  if (reward && !already){
+    $("confirmTicket").innerHTML = `
+      <div class="ticket">
+        <div class="t-head">${pos === CARD_SIZE ? "Enjoy a" : "You unlocked"}</div>
+        <div class="t-title">${esc(reward.title)}</div>
+        <div class="t-sub">${esc(reward.desc)}</div>
+        <div class="t-meta"><span class="live-dot"></span>Show this screen to staff<br>
+          <strong>${esc(me.name)}</strong> · ${esc(me.phone.replace(/(\d{2})\d{5}(\d{3})/, "$1•••••$2"))}<br>
+          <span id="liveClock"></span></div>
+      </div>`;
+    const tick = () => { const c = $("liveClock"); if (c) c.textContent = new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "medium" }); };
+    tick(); clockTimer = setInterval(tick, 1000);
+  } else {
+    $("confirmTicket").innerHTML = "";
+  }
+}
+
+/* ---------- stamps ---------- */
+async function refreshAndShowStamps(){
+  loading(true);
+  try {
+    const r = await api("lookup", { phone: me.phone });
+    if (r.ok) state = { visits: r.visits, today: r.today };
+  } catch {}
+  loading(false);
+  go("stamps");
+}
+function renderStamps(){
+  const v = state.visits, pos = posInCard(v);
+  const cards = v > 0 ? Math.floor((v - 1) / CARD_SIZE) : 0;
+  $("stampsLead").textContent = v === 0 ? "Your card is empty. Register a visit to get your first stamp."
+    : `${v} total visit${v > 1 ? "s" : ""}${cards ? ` · ${cards} card${cards > 1 ? "s" : ""} completed` : ""}`;
+  let html = "";
+  for (let i = 1; i <= CARD_SIZE; i++){
+    const done = i <= pos, isFinal = i === CARD_SIZE;
+    const cls = ["stamp", done && "done", REWARDS[i] && "has-reward", isFinal && "final", (i === pos && state.today) && "today"].filter(Boolean).join(" ");
+    const label = `Visit ${i}${done ? ", done" : ""}${REWARDS[i] ? ", reward: " + REWARDS[i].title : ""}`;
+    html += `<div class="${cls}" role="listitem" aria-label="${esc(label)}">${isFinal ? icon("gift") : done ? icon("check") : i}</div>`;
+  }
+  $("stampGrid").innerHTML = html;
+
+  const nextKey = Object.keys(REWARDS).map(Number).find(k => k > pos) ?? Number(Object.keys(REWARDS)[0]);
+  const away = nextKey > pos ? nextKey - pos : CARD_SIZE - pos + nextKey;
+  const r = REWARDS[nextKey];
+  $("nextBox").innerHTML = `<div class="ico">${icon(r.icon)}</div>
+    <div><div class="n-title">Next reward</div>
+    <div class="n-text">${away === 1 ? "Your next visit" : `${away} more visits`} gets you <b>${esc(r.title)}</b> ${esc(r.desc)}.</div></div>`;
+}
+
+/* ---------- journey ---------- */
+function renderJourney(){
+  const pos = posInCard(state.visits);
+  $("journeyList").innerHTML = Object.entries(REWARDS).map(([k, r]) => {
+    const n = Number(k), suffix = n === 2 ? "nd" : n === 3 ? "rd" : "th";
+    const cls = n <= pos ? "got" : n === CARD_SIZE ? "big" : "";
+    return `<li class="${cls}"><div class="j-ico">${icon(n <= pos ? "check" : r.icon)}</div>
+      <div><div class="j-visit">${n}${suffix} visit</div><div class="j-title">${esc(r.title)}</div><div class="j-desc">${esc(r.desc)}</div></div></li>`;
+  }).join("");
+}
+
+/* ---------- lookup ---------- */
+$("lookupForm").onsubmit = async e => {
+  e.preventDefault();
+  const phone = cleanPhone($("lPhone").value);
+  if (phone.length !== 10) return $("lookupError").textContent = "Enter a valid 10-digit mobile number.";
+  loading(true);
+  try {
+    const r = await api("lookup", { phone });
+    if (!r.ok) throw new Error(r.error);
+    me = { name: r.name, phone }; store.set("dimsim_me", me);
+    state = { visits: r.visits, today: r.today };
+    $("lookupError").textContent = ""; renderWelcome(); go("stamps");
+  } catch (ex){ $("lookupError").textContent = ex.message || "Couldn't load your visits. Try again."; }
+  finally { loading(false); }
+};
+
+/* ---------- confetti ---------- */
+function confetti(){
+  const box = $("confetti"), colors = ["#2f4a33", "#e8a93f", "#d9822b", "#6f8f4e"];
+  box.innerHTML = "";
+  for (let i = 0; i < 60; i++){
+    const p = document.createElement("i");
+    p.style.left = Math.random() * 100 + "%";
+    p.style.background = colors[i % 4];
+    p.style.animationDuration = 1.8 + Math.random() * 1.6 + "s";
+    p.style.animationDelay = Math.random() * .6 + "s";
+    box.appendChild(p);
+  }
+  setTimeout(() => box.innerHTML = "", 4200);
+}
+
+/* ---------- start ---------- */
+$("brandName").textContent = RESTAURANT;
+if (!SCRIPT_URL) $("demoBanner").classList.remove("hidden");
+renderWelcome();
+</script>
+</body>
+</html>
